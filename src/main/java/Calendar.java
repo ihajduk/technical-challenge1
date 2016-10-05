@@ -6,11 +6,10 @@ import java.util.Iterator;
 /**
  * Created by iwha on 10/2/2016.
  */
-public class Calendar implements Iterable<LocalDate> {
-    private LocalDate initDate;
-    private LocalDate forwardDate;
+public final class Calendar implements Iterable<LocalDate> {
+    private final LocalDate initDate;
 
-    public void setInitDate(LocalDate initDate) {
+    public Calendar(LocalDate initDate) {
         this.initDate = initDate;
     }
 
@@ -19,11 +18,8 @@ public class Calendar implements Iterable<LocalDate> {
         return new Itr();
     }
 
-    private class Itr implements Iterator<LocalDate> {
-
-        public Itr() {
-            forwardDate = initDate;
-        }
+    private final class Itr implements Iterator<LocalDate> {
+        private LocalDate forwardDate = initDate;
 
         @Override
         public boolean hasNext() {
