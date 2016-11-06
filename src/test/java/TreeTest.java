@@ -18,10 +18,10 @@ public class TreeTest {
         Corporate seniorLRTwo = new Corporate("Marcin");
         Corporate seniorHSOne = new Corporate("Arkadiusz");
         Corporate devLROne = new Corporate("Kamil");
-        Node<String> devLRTwo = new Corporate("Filip");
-        Node<String> devHSOne = new Corporate("Maciej");
-        Node<String> devHSTwo = new Corporate("Janusz");
-        Node<String> devHSThree = new Corporate("Radek");
+        Corporate devLRTwo = new Corporate("Filip");
+        Corporate devHSOne = new Corporate("Maciej");
+        Corporate devHSTwo = new Corporate("Janusz");
+        Corporate devHSThree = new Corporate("Radek");
         ceo.addChildren(projectManager);
         projectManager.addChildren(techLeadLR, techLeadHS);
         techLeadLR.addChildren(seniorLROne, seniorLRTwo);

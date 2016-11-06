@@ -28,7 +28,6 @@ final class Calendar implements Iterable<LocalDate> {
 
         @Override
         public LocalDate next() {
-            if(forwardDate.getYear()>2016) return null;
             switch (forwardDate.getDayOfWeek()) {
                 case WEDNESDAY:
                     forwardDate = forwardDate.with(TemporalAdjusters.next(DayOfWeek.FRIDAY)); break;

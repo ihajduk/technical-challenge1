@@ -26,7 +26,6 @@ public class Corporate implements Node<String> {
     }
 
     @SafeVarargs
-    @Override
     public final void addChildren(Node<String>... nodes) {
         Collections.addAll(children, nodes);
     }

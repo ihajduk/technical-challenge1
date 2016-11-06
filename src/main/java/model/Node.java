@@ -7,5 +7,4 @@ import java.util.Collection;
 public interface Node<T> {
     T getPayload();
     Collection<Node<T>> getChildren();
-    void addChildren(Node<T>... nodes);
 }
