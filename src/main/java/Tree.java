@@ -1,27 +1,50 @@
 import model.Node;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.Collections;
 import java.util.Iterator;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Stack;
 
-class Tree {
-    static <T> Iterable<T> convert(Node<T> root){
-        return recursiveStream(root).map(Node::getPayload).collect(Collectors.toList());
+final class Tree {
+
+    static <T> Iterable<T> convert(@Nullable Node<T> root){
+        if(root==null) //noinspection unchecked
+            return Collections.EMPTY_LIST;
+
+        return new TreeIterable<>(root);
     }
 
-    private static <T> Stream<Node<T>> recursiveStream(Node<T> node){
-        if(node.getChildren().isEmpty()){
-            return Stream.of(node);
-        } else {
-            return Stream.concat(Stream.of(node), node.getChildren().stream().flatMap(s -> recursiveStream(s)));
+    private static class TreeIterable<T> implements Iterable<T> {
+        final Node<T> node;
+
+        TreeIterable(@NotNull Node<T> node) {
+            this.node = node;
         }
-    }
-
-    class TreeIterable<T> implements Iterable<T> {
 
         @Override
         public Iterator<T> iterator() {
-            return null;
+            return new TreeIterator();
+        }
+
+        class TreeIterator implements Iterator<T>{
+            Stack<Node<T>> remainingChildren = new Stack<>();
+
+            TreeIterator() {
+                remainingChildren.addAll(node.getChildren());
+            }
+
+            @Override
+            public boolean hasNext() {
+                return !remainingChildren.isEmpty();
+            }
+
+            @Override
+            public T next() {
+                Node<T> node = remainingChildren.pop();
+                remainingChildren.addAll(node.getChildren());
+                return node.getPayload();
+            }
         }
     }
 

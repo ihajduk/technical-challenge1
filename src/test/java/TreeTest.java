@@ -1,6 +1,6 @@
-import model.Corporate;
-import model.Node;
 import org.junit.Test;
+
+import java.util.Collections;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 
@@ -9,7 +9,7 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
  */
 public class TreeTest {
     @Test
-    public void conversionTest() {
+    public void shouldProduceExpectedIterable() {
         Corporate ceo = new Corporate("Prezes Paweł");
         Corporate projectManager = new Corporate("Karolina");
         Corporate techLeadLR = new Corporate("Mateusz");
@@ -30,11 +30,19 @@ public class TreeTest {
         seniorLRTwo.addChildren(devLRTwo);
         seniorHSOne.addChildren(devHSOne, devHSTwo, devHSThree);
 
-        Iterable<String> iterable = Tree.convert(ceo);
+        Iterable<String> treeIterable = Tree.convert(ceo);
 
-        assertThat(iterable).contains(
-                "Prezes Paweł", "Karolina", "Mateusz", "Michał", "Kamil", "Marcin",
+        assertThat(treeIterable).contains(
+                "Karolina", "Mateusz", "Michał", "Kamil", "Marcin",
                 "Karol", "Arkadiusz", "Maciej", "Janusz", "Radek"
         );
+    }
+
+    @Test
+    public void shouldProduceEmptyList(){
+
+        Iterable<String> nullRootIterable = Tree.convert(null);
+
+        assertThat(nullRootIterable).isEqualTo(Collections.EMPTY_LIST);
     }
 }

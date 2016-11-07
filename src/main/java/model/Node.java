@@ -2,9 +2,12 @@ package model;
 /*
  * Created by iwha on 11/1/2016.
  */
+
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Collection;
 
 public interface Node<T> {
     T getPayload();
-    Collection<Node<T>> getChildren();
+    @NotNull Collection<Node<T>> getChildren();
 }
