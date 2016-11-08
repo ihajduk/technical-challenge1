@@ -1,10 +1,9 @@
+package prework;
+
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Iterator;
-
-import static java.time.DayOfWeek.WEDNESDAY;
 
 final class Calendar implements Iterable<LocalDate> {
     private final LocalDate initDate;

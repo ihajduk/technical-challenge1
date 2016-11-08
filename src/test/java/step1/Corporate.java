@@ -1,5 +1,7 @@
-import model.Node;
+package step1;
+
 import org.jetbrains.annotations.NotNull;
+import step1.model.Node;
 
 import java.util.ArrayList;
 import java.util.Collection;

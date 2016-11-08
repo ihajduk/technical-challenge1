@@ -1,4 +1,6 @@
-import model.Node;
+package step1;
+
+import step1.model.Node;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
