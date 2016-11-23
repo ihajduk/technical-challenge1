@@ -9,7 +9,7 @@ import java.util.Stack;
 /**
  * Created by iwha on 11/7/2016.
  */
-final class TreeOfFiles {
+class TreeOfFiles {
 
 //    public static <T> Observable<T> convert(@Nullable Node<T> root) {
 //        BehaviorSubject<Node<T>> subject = BehaviorSubject.create(root);
