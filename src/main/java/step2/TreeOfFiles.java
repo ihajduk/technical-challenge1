@@ -11,21 +11,16 @@ import java.util.Stack;
  */
 class TreeOfFiles {
 
-//    public static <T> Observable<T> convert(@Nullable Node<T> root) {
-//        BehaviorSubject<Node<T>> subject = BehaviorSubject.create(root);
-//        subject.flatMap(node -> Observable.from(node.getChildren())).subscribe(node -> subject.onNext(node));
-//        return subject.asObservable().map(node -> node.getPayload());
-//    }
-
     static <R> Observable<R> createConvert(@Nullable Node<R> root) {
-        if(root==null){
-            return Observable.empty();
+        if (root == null) {
+            return Observable.never();
         }
 
         Stack<Node<R>> remainingChildren = new Stack<>();
         remainingChildren.addAll(root.getChildren());
+
         return Observable.create(observer -> {
-            while(!remainingChildren.isEmpty()){
+            while (!remainingChildren.isEmpty()) {
                 Node<R> node = remainingChildren.pop();
                 remainingChildren.addAll(node.getChildren());
                 observer.onNext(node.getPayload());
