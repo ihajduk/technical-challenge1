@@ -2,6 +2,7 @@ package step2;
 
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import rx.observers.TestSubscriber;
@@ -24,10 +25,21 @@ public class TreeOfFilesTest {
     public void createFileSystem() {
         fs = Jimfs.newFileSystem(Configuration.unix()
                 .toBuilder()
+                .setAttributeViews("basic", "owner", "posix", "unix")
+                .setMaxSize(1024 * 1024 * 1024) // 1 GB
+                .setMaxCacheSize(256 * 1024 * 1024) // 256 MB
                 .setRoots("/")
                 .setWorkingDirectory("/src")
                 .build());
+    }
 
+    @After
+    public void tearDown() throws IOException {
+        fs.close();
+    }
+
+    @Test
+    public void shouldProduceExpectedFileStream() {
         try {
             Files.createDirectories(fs.getPath("resources/h2"));
             Files.createFile(fs.getPath("sample.txt"));
@@ -36,10 +48,6 @@ public class TreeOfFilesTest {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    @Test
-    public void shouldProduceExpectedFileStream() {
         File file = new File(fs.getPath("/src").toString());
         FileNode fn = new FileNode(file);
         TestSubscriber<File> testSubscriber = new TestSubscriber<>();
