@@ -11,6 +11,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -25,7 +27,6 @@ public class TreeOfFilesTest {
     public void createFileSystem() {
         fs = Jimfs.newFileSystem(Configuration.unix()
                 .toBuilder()
-                .setAttributeViews("basic", "owner", "posix", "unix")
                 .setMaxSize(1024 * 1024 * 1024) // 1 GB
                 .setMaxCacheSize(256 * 1024 * 1024) // 256 MB
                 .setRoots("/")
@@ -41,16 +42,16 @@ public class TreeOfFilesTest {
     @Test
     public void shouldProduceExpectedFileStream() {
         try {
-            Files.createDirectories(fs.getPath("resources/h2"));
+            Files.createDirectories(fs.getPath("main/resources/h2"));
             Files.createFile(fs.getPath("sample.txt"));
             Files.createFile(fs.getPath("rzenada.bmp"));
-            Files.createFile(fs.getPath("resources/h2/test.mv.db"));
+            Files.createFile(fs.getPath("main/resources/h2/test.mv.db"));
         } catch (IOException e) {
             e.printStackTrace();
         }
-        File file = new File(fs.getPath("/src").toString());
-        FileNode fn = new FileNode(file);
-        TestSubscriber<File> testSubscriber = new TestSubscriber<>();
+        Path filePath = fs.getPath("/src");
+        PathNode fn = new PathNode(filePath);
+        TestSubscriber<Path> testSubscriber = new TestSubscriber<>();
 
         TreeOfFiles.createConvert(fn).subscribe(testSubscriber);
 
@@ -61,14 +62,14 @@ public class TreeOfFilesTest {
                         "/src/main/resources",
                         "/src/main/resources/h2",
                         "/src/main/resources/h2/test.mv.db")
-                        .map(e -> new File(e))
+                        .map(e -> fs.getPath(e))
                         .collect(Collectors.toList()));
     }
 
     @Test
     public void shouldProduceEmptyStream() {
-        FileNode fn = null;
-        TestSubscriber<File> testSubscriber = new TestSubscriber<>();
+        PathNode fn = null;
+        TestSubscriber<Path> testSubscriber = new TestSubscriber<>();
 
         TreeOfFiles.createConvert(fn).subscribe(testSubscriber);
 
