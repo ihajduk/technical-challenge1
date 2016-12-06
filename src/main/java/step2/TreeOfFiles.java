@@ -8,9 +8,9 @@ import java.util.Stack;
 /**
  * Created by iwha on 11/7/2016.
  */
-class TreeOfFiles {
+public class TreeOfFiles {
 
-    static <R> Observable<R> createConvert(@Nullable Node<R> root) {
+    public static <R> Observable<R> createConvert(@Nullable Node<R> root) {
         if (root == null) {
             return Observable.never();
         }

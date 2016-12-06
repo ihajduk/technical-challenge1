@@ -13,10 +13,10 @@ import java.util.stream.Collectors;
 /**
  * Created by iwha on 11/15/2016.
  */
-final class PathNode implements Node<Path> {
+public final class PathNode implements Node<Path> {
     private final Path rootPath;
 
-    PathNode(Path rootPath) {
+    public PathNode(Path rootPath) {
         this.rootPath = rootPath;
     }
 
