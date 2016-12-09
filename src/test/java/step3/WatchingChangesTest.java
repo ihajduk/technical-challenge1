@@ -1,29 +1,30 @@
 package step3;
 
 import abs.AbstractFilesysPreparation;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
-import rx.observers.TestSubscriber;
+import rx.subjects.ReplaySubject;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
 
 /**
  * Created by iwha on 12/8/2016.
  */
-public class WatchingChangesTest extends AbstractFilesysPreparation {
+public class WatchingChangesTest extends AbstractFilesysPreparation {  // TODO: change on static class
 
     @Test
     public void shouldNotifyWhenCreateFile() throws IOException {
-        String NEWFILE = "/src/main/newfile.txt";
+        String NEWFILEPATH = "/src/main/";
+        String NEWFILENAME = "newfile.txt";
         String WORKDIR = "/src";
         Path root = fs.getPath(WORKDIR);
-        TestSubscriber<Path> testSubscriber = new TestSubscriber<>();
+        ReplaySubject<Path> testSubscriber = ReplaySubject.create();
 
         WatchingChanges.watchChanges(root).subscribe(testSubscriber);
-        Files.createFile(fs.getPath(NEWFILE));
+        Files.createFile(fs.getPath(NEWFILEPATH+NEWFILENAME));
 
-        testSubscriber.assertReceivedOnNext(Collections.singletonList(fs.getPath(NEWFILE)));
+        Assertions.assertThat(testSubscriber.toBlocking().first()).isEqualTo(fs.getPath(NEWFILENAME));  // TODO: recursive folders: nowy/nowy/dupa.txt
     }
 }

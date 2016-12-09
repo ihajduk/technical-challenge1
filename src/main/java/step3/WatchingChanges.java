@@ -1,12 +1,14 @@
 package step3;
 
 import rx.Observable;
+import rx.Observer;
 import step1.model.Node;
 import step2.PathNode;
 import step2.TreeOfFiles;
 
 import java.io.IOException;
 import java.nio.file.*;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -16,7 +18,7 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 /**
  * Created by iwha on 12/4/2016.
  */
-class WatchingChanges {
+class WatchingChanges { //TODO: extends Observable<Path> {    --> zwolnienie zasobów
 
     static Observable<Path> watchChanges(Path root) throws IOException {
         WatchService watchService = root.getFileSystem().newWatchService();
@@ -34,7 +36,10 @@ class WatchingChanges {
                 }
         );
 
-        return Observable.create(observer -> {
+        List<Observer<Path>> list;  //TODO: watek w osobnej metodzie
+
+//TODO: create closable class
+        return Observable.create(observer -> {  // nowy per subscriber
 
             ExecutorService executorService = Executors.newSingleThreadExecutor();
             executorService.submit(() -> {
@@ -42,7 +47,7 @@ class WatchingChanges {
 
                     WatchKey key = null;
                     try {
-                        key = watchService.take();
+                        key = watchService.take();  // TODO: check InterruptedException
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -57,7 +62,7 @@ class WatchingChanges {
                     }
                 }
                 try {
-                    watchService.close();
+                    watchService.close(); // TODO: close thread and watchService
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
