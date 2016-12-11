@@ -8,8 +8,9 @@ import step2.TreeOfFiles;
 
 import java.io.IOException;
 import java.nio.file.*;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -18,10 +19,40 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 /**
  * Created by iwha on 12/4/2016.
  */
-class WatchingChanges { //TODO: extends Observable<Path> {    --> zwolnienie zasobów
+class WatchingChanges extends Observable<Path> implements AutoCloseable {
 
-    static Observable<Path> watchChanges(Path root) throws IOException {
-        WatchService watchService = root.getFileSystem().newWatchService();
+    private static Set<Observer> observers = new HashSet<>();
+
+    private static WatchService watchService;
+    private static ExecutorService executorService;
+
+    private WatchingChanges(OnSubscribe<Path> f) {
+        super(f);
+    }
+
+    private static Thread notifyingThread = new Thread(() -> {
+        while (!Thread.interrupted()) {
+
+            WatchKey key = null;
+            try {
+                key = watchService.take();
+            } catch (InterruptedException e) {
+                observers.forEach(Observer::onCompleted);
+            }
+
+            if (Optional.ofNullable(key).isPresent()) {
+                key.pollEvents().stream()
+                        .filter(event -> event.kind() == ENTRY_CREATE)
+                        .forEach(event -> {
+                            Path newPath = ((WatchEvent<Path>) event).context();
+                            observers.forEach(o -> o.onNext(newPath));
+                        });
+            }
+        }
+    });
+
+    static WatchingChanges watchChanges(Path root) throws IOException {
+        watchService = root.getFileSystem().newWatchService();
 
         Node<Path> pathNodeRoot = new PathNode(root);
 
@@ -35,38 +66,16 @@ class WatchingChanges { //TODO: extends Observable<Path> {    --> zwolnienie zas
                     }
                 }
         );
+        // starting thread
+        executorService = Executors.newSingleThreadExecutor();
+        executorService.submit(notifyingThread);
 
-        List<Observer<Path>> list;  //TODO: watek w osobnej metodzie
+        return new WatchingChanges(observer -> observers.add(observer));
+    }
 
-//TODO: create closable class
-        return Observable.create(observer -> {  // nowy per subscriber
-
-            ExecutorService executorService = Executors.newSingleThreadExecutor();
-            executorService.submit(() -> {
-                while (!Thread.interrupted()) {
-
-                    WatchKey key = null;
-                    try {
-                        key = watchService.take();  // TODO: check InterruptedException
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-
-                    if (Optional.ofNullable(key).isPresent()) {
-                        key.pollEvents().stream()
-                                .filter(event -> event.kind() == ENTRY_CREATE)
-                                .forEach(event -> {
-                                    Path newPath = ((WatchEvent<Path>) event).context();
-                                    observer.onNext(newPath);
-                                });
-                    }
-                }
-                try {
-                    watchService.close(); // TODO: close thread and watchService
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
-        });
+    @Override
+    public void close() throws Exception {
+        executorService.shutdownNow();
+        watchService.close();
     }
 }
