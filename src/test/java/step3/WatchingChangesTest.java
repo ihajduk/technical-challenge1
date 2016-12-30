@@ -3,10 +3,11 @@ package step3;
 import abs.AbstractFilesysPreparation;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
+import rx.observers.TestSubscriber;
 import rx.subjects.ReplaySubject;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.NoSuchElementException;
 
 /**
  * Created by iwha on 12/8/2016.
@@ -14,29 +15,76 @@ import java.nio.file.Path;
 public class WatchingChangesTest extends AbstractFilesysPreparation {
 
     @Test
-    public void shouldNotifyWhenCreateFile() throws Exception {
-        String NEWFILEPATH = "/src/main/";
+    public void shouldNotifyEverySubscriber() throws Exception {
+        String NEWFILEPATH = "/src/main";
         String NEWFILENAME = "newfile.txt";
+        String WORKDIR = "/src";
+        Path root = fs.getPath(WORKDIR);
+        TestSubscriber<Path> testSubscriber1 = TestSubscriber.create();
+        TestSubscriber<Path> testSubscriber2 = TestSubscriber.create();
+        TestSubscriber<Path> testSubscriber3 = TestSubscriber.create();
+
+        try (WatchingChanges pathObservable = WatchingChanges.watchChanges(root)) {
+            pathObservable.subscribe(testSubscriber1);
+            pathObservable.subscribe(testSubscriber2);
+            pathObservable.subscribe(testSubscriber3);
+            pathObservable.addFile(fs.getPath(NEWFILEPATH,NEWFILENAME));
+        }
+
+        testSubscriber1.assertValue(fs.getPath(NEWFILEPATH,NEWFILENAME));
+        testSubscriber2.assertValue(fs.getPath(NEWFILEPATH,NEWFILENAME));
+        testSubscriber3.assertValue(fs.getPath(NEWFILEPATH,NEWFILENAME));
+    }
+
+    @Test
+    public void shouldNotifyWhenCreateMultipleFiles() throws Exception {
+        String NEWFILEPATH = "/src/main";
+        String NEWFILEPATH2 = "/src/main/resources";
+        String NEWFILENAME = "newfile1.txt";
         String NEWFILENAME2 = "newfile2.txt";
         String WORKDIR = "/src";
         Path root = fs.getPath(WORKDIR);
-        ReplaySubject<Path> testSubscriber = ReplaySubject.create();
-        ReplaySubject<Path> testSubscriber2 = ReplaySubject.create();
-        ReplaySubject<Path> testSubscriber3 = ReplaySubject.create();
-        ReplaySubject<Path> testSubscriber4 = ReplaySubject.create();
+        TestSubscriber<Path> testSubscriber = TestSubscriber.create();
+
+        try (WatchingChanges pathObservable = WatchingChanges.watchChanges(root)) {
+            pathObservable.subscribe(testSubscriber);
+            pathObservable.addFile(fs.getPath(NEWFILEPATH,NEWFILENAME));
+            pathObservable.addFile(fs.getPath(NEWFILEPATH2,NEWFILENAME2));
+        }
+
+        testSubscriber.assertValues(fs.getPath(NEWFILEPATH,NEWFILENAME), fs.getPath(NEWFILEPATH2,NEWFILENAME2));
+    }
+
+    @Test
+    public void shouldThrowExceptionWhenSubscribeAfterClose() throws Exception {
+        String NEWFILEPATH = "/src/main";
+        String NEWFILENAME2 = "newfileclosed2.txt";
+        String WORKDIR = "/src";
+        Path root = fs.getPath(WORKDIR);
+        ReplaySubject<Path> replaySubject = ReplaySubject.create();
 
         WatchingChanges pathObservable = WatchingChanges.watchChanges(root);
-        pathObservable.subscribe(testSubscriber);
-        pathObservable.subscribe(testSubscriber2);
-        pathObservable.subscribe(testSubscriber3);
-        Files.createFile(fs.getPath(NEWFILEPATH + NEWFILENAME));
-
-        Assertions.assertThat(testSubscriber.toBlocking().first()).isEqualTo(fs.getPath(NEWFILENAME));  // TODO: recursive folders: nowy/nowy/dupa.txt
-        Assertions.assertThat(testSubscriber2.toBlocking().first()).isEqualTo(fs.getPath(NEWFILENAME));
-        Assertions.assertThat(testSubscriber3.toBlocking().first()).isEqualTo(fs.getPath(NEWFILENAME));
         pathObservable.close();
-        pathObservable.subscribe(testSubscriber4);
-        Files.createFile(fs.getPath(NEWFILEPATH + NEWFILENAME2));
+        pathObservable.subscribe(replaySubject);
+        pathObservable.addFile(fs.getPath(NEWFILEPATH,NEWFILENAME2));
 
+        Assertions.assertThatThrownBy(() -> replaySubject.toBlocking().first()).isInstanceOf(NoSuchElementException.class);
+    }
+
+    @Test
+    public void shouldNotifyOnRecursiveCreation() throws Exception {
+        String NEWFOLDER = "/src/main/newfolder";
+        String NEWRECURSIVEFILENAME = "newrecursivefile.txt";
+        String WORKDIR = "/src";
+        Path root = fs.getPath(WORKDIR);
+        TestSubscriber<Path> testSubscriber = TestSubscriber.create();
+
+        try (WatchingChanges pathObservable = WatchingChanges.watchChanges(root)) {
+            pathObservable.subscribe(testSubscriber);
+            pathObservable.addDirectory(fs.getPath(NEWFOLDER));
+            pathObservable.addFile(fs.getPath(NEWFOLDER,NEWRECURSIVEFILENAME));
+        }
+
+        testSubscriber.assertValues(fs.getPath(NEWFOLDER), fs.getPath(NEWFOLDER,NEWRECURSIVEFILENAME));
     }
 }
