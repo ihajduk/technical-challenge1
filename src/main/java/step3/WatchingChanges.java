@@ -21,7 +21,7 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 /**
  * Created by iwha on 12/4/2016.
  */
-class WatchingChanges extends Observable<Path> implements AutoCloseable {
+public class WatchingChanges extends Observable<Path> implements AutoCloseable {
 
     private static Semaphore semaphore = new Semaphore(0);
     private static Set<Observer> observers = new HashSet<>();
@@ -109,23 +109,5 @@ class WatchingChanges extends Observable<Path> implements AutoCloseable {
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
-    }
-
-    public static void main(String[] args) {
-        Path root = Paths.get("c:\\src");
-        TestSubscriber<Path> ts = TestSubscriber.create();
-        try (WatchingChanges watchingChanges = watchChanges(root)) {
-            watchingChanges.subscribe(ts);
-            Files.createDirectory(root.getFileSystem().getPath("c:\\src\\main\\New folder (3)"));
-            Files.createDirectory(root.getFileSystem().getPath("c:\\src\\main\\New folder (2)"));
-            Files.createDirectory(root.getFileSystem().getPath("c:\\src\\main\\New folder"));
-            Thread.sleep(5000);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        ts.assertValues(
-                root.getFileSystem().getPath("c:\\src\\main\\New folder (3)"),
-                root.getFileSystem().getPath("c:\\src\\main\\New folder (2)"),
-                root.getFileSystem().getPath("c:\\src\\main\\New folder"));
     }
 }
