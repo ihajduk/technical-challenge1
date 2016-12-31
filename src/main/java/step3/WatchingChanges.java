@@ -2,13 +2,15 @@ package step3;
 
 import rx.Observable;
 import rx.Observer;
-import rx.observers.TestSubscriber;
 import step1.model.Node;
 import step2.PathNode;
 import step2.TreeOfFiles;
 
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;

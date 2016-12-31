@@ -1,14 +1,10 @@
 package step3;
 
 import abs.AbstractFilesysPreparation;
-import org.assertj.core.api.Assertions;
-import org.junit.Ignore;
 import org.junit.Test;
 import rx.observers.TestSubscriber;
-import rx.subjects.ReplaySubject;
 
 import java.nio.file.Path;
-import java.util.NoSuchElementException;
 
 /**
  * Created by iwha on 12/8/2016.
