@@ -2,6 +2,7 @@ package step3;
 
 import abs.AbstractFilesysPreparation;
 import org.assertj.core.api.Assertions;
+import org.junit.Ignore;
 import org.junit.Test;
 import rx.observers.TestSubscriber;
 import rx.subjects.ReplaySubject;
@@ -56,19 +57,19 @@ public class WatchingChangesTest extends AbstractFilesysPreparation {
     }
 
     @Test
-    public void shouldThrowExceptionWhenSubscribeAfterClose() throws Exception {
+    public void shouldNotReceiveEventsAfterClose() throws Exception {
         String NEWFILEPATH = "/src/main";
         String NEWFILENAME2 = "newfileclosed2.txt";
         String WORKDIR = "/src";
         Path root = fs.getPath(WORKDIR);
-        ReplaySubject<Path> replaySubject = ReplaySubject.create();
+        TestSubscriber<Path> testSubscriber = TestSubscriber.create();
 
         WatchingChanges pathObservable = WatchingChanges.watchChanges(root);
         pathObservable.close();
-        pathObservable.subscribe(replaySubject);
+        pathObservable.subscribe(testSubscriber);
         pathObservable.addFile(fs.getPath(NEWFILEPATH,NEWFILENAME2));
 
-        Assertions.assertThatThrownBy(() -> replaySubject.toBlocking().first()).isInstanceOf(NoSuchElementException.class);
+        testSubscriber.assertNoValues();
     }
 
     @Test

@@ -23,7 +23,7 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
  */
 class WatchingChanges extends Observable<Path> implements AutoCloseable {
 
-    private static Semaphore semaphore = new Semaphore(1);
+    private static Semaphore semaphore = new Semaphore(0);
     private static Set<Observer> observers = new HashSet<>();
     private static WatchService watchService;
     private static ExecutorService executorService;
@@ -79,7 +79,6 @@ class WatchingChanges extends Observable<Path> implements AutoCloseable {
                 }
         );
         // starting thread
-        semaphore.acquire();
         executorService = Executors.newSingleThreadExecutor();
         executorService.submit(notifyingThread);
 
