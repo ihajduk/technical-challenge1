@@ -2,8 +2,10 @@ package step3;
 
 import abs.AbstractFilesysPreparation;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import rx.observers.TestSubscriber;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 /**

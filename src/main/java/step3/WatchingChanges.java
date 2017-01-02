@@ -25,47 +25,13 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
  */
 public class WatchingChanges extends Observable<Path> implements AutoCloseable {
 
-    private static Semaphore semaphore = new Semaphore(0);
     private static Set<Observer> observers = new HashSet<>();
-    private static WatchService watchService;
-    private static ExecutorService executorService;
+    private Semaphore semaphore = new Semaphore(0);
+    private WatchService watchService;
+    private ExecutorService executorService;
 
-    private WatchingChanges(OnSubscribe<Path> f) {
+    private WatchingChanges(Path root, OnSubscribe<Path> f) throws IOException {
         super(f);
-    }
-
-    private static Thread notifyingThread = new Thread(() -> {
-        while (!Thread.interrupted()) {
-
-            WatchKey key = null;
-            try {
-                key = watchService.take();
-                if (Optional.ofNullable(key).isPresent()) {
-                    WatchKey finalKey = key;
-                    key.pollEvents().stream()
-                            .filter(event -> event.kind() == ENTRY_CREATE)
-                            .forEach(event -> {
-                                Path currentDirectoryPath = (Path) finalKey.watchable();
-                                Path fullNewPath = currentDirectoryPath.resolve((Path) event.context());
-                                if (Files.isDirectory(fullNewPath)) {
-                                    try {
-                                        fullNewPath.register(watchService, ENTRY_CREATE);
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                                observers.forEach(o -> o.onNext(fullNewPath));
-                            });
-                }
-            } catch (InterruptedException e) {
-                observers.forEach(Observer::onCompleted);
-            }
-            key.reset();
-            semaphore.release();
-        }
-    });
-
-    static WatchingChanges watchChanges(Path root) throws IOException, InterruptedException {
         watchService = root.getFileSystem().newWatchService();
 
         Node<Path> pathNodeRoot = new PathNode(root);
@@ -80,11 +46,53 @@ public class WatchingChanges extends Observable<Path> implements AutoCloseable {
                     }
                 }
         );
-        // starting thread
-        executorService = Executors.newSingleThreadExecutor();
-        executorService.submit(notifyingThread);
 
-        return new WatchingChanges(observer -> observers.add(observer));
+        executorService = Executors.newSingleThreadExecutor();
+
+        Thread notifyingThread = new Thread(() -> {
+            while (!Thread.interrupted()) {
+
+                WatchKey key = null;
+                try {
+                    key = watchService.take();
+                    if (Optional.ofNullable(key).isPresent()) {
+                        WatchKey finalKey = key;
+                        key.pollEvents().stream()
+                                .filter(event -> event.kind() == ENTRY_CREATE)
+                                .forEach(event -> {
+                                    Path currentDirectoryPath = (Path) finalKey.watchable();
+                                    Path fullNewPath = currentDirectoryPath.resolve((Path) event.context());
+                                    if (Files.isDirectory(fullNewPath)) {
+                                        try {
+                                            fullNewPath.register(watchService, ENTRY_CREATE);
+                                        } catch (IOException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                    observers.forEach(o -> o.onNext(fullNewPath));
+                                });
+                    }
+                } catch (InterruptedException e) {
+                    observers.forEach(Observer::onCompleted);
+                }
+                key.reset();
+                semaphore.release();
+            }
+        });
+        // starting thread
+        executorService.submit(notifyingThread);
+    }
+
+    static WatchingChanges watchChanges(Path root) throws IOException, InterruptedException {
+        return new WatchingChanges(root, observer -> observers.add(observer));
+    }
+
+    public Semaphore getSemaphore() {
+        return semaphore;
+    }
+
+    public ExecutorService getExecutorService() {
+        return executorService;
     }
 
     @Override
