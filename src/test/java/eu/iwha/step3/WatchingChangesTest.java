@@ -1,28 +1,18 @@
-package step3;
+package eu.iwha.step3;
 
 import abs.AbstractFilesysPreparation;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import rx.observers.TestSubscriber;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
 
 /**
  * Created by iwha on 12/8/2016.
  */
 
-//@RunWith( SpringJUnit4ClassRunner.class )
-//@ContextConfiguration(locations = {"/application-context.xml"})
 public class WatchingChangesTest extends AbstractFilesysPreparation {
-
-//    @Autowired
-//    WatchingChangesService watchingChangesService;
 
     @Test
     public void shouldNotifyEverySubscriber() throws Exception {
@@ -101,11 +91,6 @@ public class WatchingChangesTest extends AbstractFilesysPreparation {
             testSubscriber.assertValues(fs.getPath(NEWFOLDER), fs.getPath(NEWFOLDER,NEWRECURSIVEFILENAME));
         }
     }
-
-//    @Test
-//    public void autowiredServiceTest(){
-//        watchingChangesService.addPath(fs.getPath("/src/dupa.gif"));
-//    }
 }
 
 

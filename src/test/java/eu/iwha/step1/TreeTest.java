@@ -1,4 +1,4 @@
-package step1;
+package eu.iwha.step1;
 
 import org.junit.Test;
 

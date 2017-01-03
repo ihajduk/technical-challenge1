@@ -1,12 +1,12 @@
-package step3;
+package eu.iwha.step3;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.Observer;
-import step1.model.Node;
-import step2.PathNode;
-import step2.TreeOfFiles;
+import eu.iwha.step1.model.Node;
+import eu.iwha.step2.PathNode;
+import eu.iwha.step2.TreeOfFiles;
 
 import java.io.IOException;
 import java.nio.file.Files;

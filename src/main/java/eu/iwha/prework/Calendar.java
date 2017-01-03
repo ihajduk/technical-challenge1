@@ -1,4 +1,4 @@
-package prework;
+package eu.iwha.prework;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;

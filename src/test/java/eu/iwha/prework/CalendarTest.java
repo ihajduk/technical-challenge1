@@ -1,7 +1,6 @@
-package prework;
+package eu.iwha.prework;
 
 import org.junit.Test;
-import prework.Calendar;
 
 import java.time.LocalDate;
 import java.util.Iterator;

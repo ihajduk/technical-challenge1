@@ -1,4 +1,4 @@
-package step2;
+package eu.iwha.step2;
 
 import abs.AbstractFilesysPreparation;
 import org.junit.Test;

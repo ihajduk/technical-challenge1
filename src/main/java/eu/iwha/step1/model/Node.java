@@ -1,4 +1,4 @@
-package step1.model;
+package eu.iwha.step1.model;
 /*
  * Created by iwha on 11/1/2016.
  */

@@ -1,6 +1,6 @@
-package step1;
+package eu.iwha.step1;
 
-import step1.model.Node;
+import eu.iwha.step1.model.Node;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
