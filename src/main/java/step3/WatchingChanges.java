@@ -1,5 +1,7 @@
 package step3;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.Observer;
 import step1.model.Node;
@@ -16,7 +18,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Semaphore;
 
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 
@@ -25,13 +26,16 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
  */
 public class WatchingChanges extends Observable<Path> implements AutoCloseable {
 
+    private static final Logger logger = LoggerFactory.getLogger(WatchingChanges.class);
+
     private static Set<Observer> observers = new HashSet<>();
-    private Semaphore semaphore = new Semaphore(0);
     private WatchService watchService;
     private ExecutorService executorService;
 
     private WatchingChanges(Path root, OnSubscribe<Path> f) throws IOException {
         super(f);
+        logger.info("Creating Reactive Observable WatchingChanges");
+
         watchService = root.getFileSystem().newWatchService();
 
         Node<Path> pathNodeRoot = new PathNode(root);
@@ -46,7 +50,9 @@ public class WatchingChanges extends Observable<Path> implements AutoCloseable {
                     }
                 }
         );
+        logger.info("Watch Service registered on each directory of /src subfolders");
 
+        logger.info("Starting observing thread...");
         executorService = Executors.newSingleThreadExecutor();
 
         Thread notifyingThread = new Thread(() -> {
@@ -54,6 +60,7 @@ public class WatchingChanges extends Observable<Path> implements AutoCloseable {
 
                 WatchKey key = null;
                 try {
+                    logger.info("Waiting for events...");
                     key = watchService.take();
                     if (Optional.ofNullable(key).isPresent()) {
                         WatchKey finalKey = key;
@@ -62,6 +69,7 @@ public class WatchingChanges extends Observable<Path> implements AutoCloseable {
                                 .forEach(event -> {
                                     Path currentDirectoryPath = (Path) finalKey.watchable();
                                     Path fullNewPath = currentDirectoryPath.resolve((Path) event.context());
+                                    logger.info("Event found: " + fullNewPath);
                                     if (Files.isDirectory(fullNewPath)) {
                                         try {
                                             fullNewPath.register(watchService, ENTRY_CREATE);
@@ -76,23 +84,15 @@ public class WatchingChanges extends Observable<Path> implements AutoCloseable {
                     observers.forEach(Observer::onCompleted);
                 }
                 key.reset();
-                semaphore.release();
+                logger.info("Event handling has been completed");
             }
         });
         // starting thread
         executorService.submit(notifyingThread);
     }
 
-    static WatchingChanges watchChanges(Path root) throws IOException, InterruptedException {
+    public static WatchingChanges watchChanges(Path root) throws IOException, InterruptedException {
         return new WatchingChanges(root, observer -> observers.add(observer));
-    }
-
-    public Semaphore getSemaphore() {
-        return semaphore;
-    }
-
-    public ExecutorService getExecutorService() {
-        return executorService;
     }
 
     @Override
@@ -100,24 +100,6 @@ public class WatchingChanges extends Observable<Path> implements AutoCloseable {
         observers.forEach(o -> o.onCompleted());
         executorService.shutdownNow();
         watchService.close();
-    }
-
-    public void addFile(Path path) {
-        try {
-            Files.createFile(path.getFileSystem().getPath(path.toString()));
-            if(!executorService.isShutdown())
-                semaphore.acquire();
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void addDirectory(Path path) {
-        try {
-            Files.createDirectory(path.getFileSystem().getPath(path.toString()));
-            semaphore.acquire();
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-        }
+        logger.info("WatchingChanges has been closed");
     }
 }

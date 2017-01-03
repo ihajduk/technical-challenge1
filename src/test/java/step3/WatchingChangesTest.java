@@ -2,16 +2,27 @@ package step3;
 
 import abs.AbstractFilesysPreparation;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import rx.observers.TestSubscriber;
 
-import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by iwha on 12/8/2016.
  */
+
+//@RunWith( SpringJUnit4ClassRunner.class )
+//@ContextConfiguration(locations = {"/application-context.xml"})
 public class WatchingChangesTest extends AbstractFilesysPreparation {
+
+//    @Autowired
+//    WatchingChangesService watchingChangesService;
 
     @Test
     public void shouldNotifyEverySubscriber() throws Exception {
@@ -27,12 +38,13 @@ public class WatchingChangesTest extends AbstractFilesysPreparation {
             pathObservable.subscribe(testSubscriber1);
             pathObservable.subscribe(testSubscriber2);
             pathObservable.subscribe(testSubscriber3);
-            pathObservable.addFile(fs.getPath(NEWFILEPATH,NEWFILENAME));
-        }
+            Files.createFile(fs.getPath(NEWFILEPATH,NEWFILENAME));
+            testSubscriber1.awaitValueCount(1, 7000, TimeUnit.MILLISECONDS);
 
-        testSubscriber1.assertValue(fs.getPath(NEWFILEPATH,NEWFILENAME));
-        testSubscriber2.assertValue(fs.getPath(NEWFILEPATH,NEWFILENAME));
-        testSubscriber3.assertValue(fs.getPath(NEWFILEPATH,NEWFILENAME));
+            testSubscriber1.assertValue(fs.getPath(NEWFILEPATH,NEWFILENAME));
+            testSubscriber2.assertValue(fs.getPath(NEWFILEPATH,NEWFILENAME));
+            testSubscriber3.assertValue(fs.getPath(NEWFILEPATH,NEWFILENAME));
+        }
     }
 
     @Test
@@ -47,11 +59,11 @@ public class WatchingChangesTest extends AbstractFilesysPreparation {
 
         try (WatchingChanges pathObservable = WatchingChanges.watchChanges(root)) {
             pathObservable.subscribe(testSubscriber);
-            pathObservable.addFile(fs.getPath(NEWFILEPATH,NEWFILENAME));
-            pathObservable.addFile(fs.getPath(NEWFILEPATH2,NEWFILENAME2));
+            Files.createFile(fs.getPath(NEWFILEPATH,NEWFILENAME));
+            Files.createFile(fs.getPath(NEWFILEPATH2,NEWFILENAME2));
+            testSubscriber.awaitValueCount(2, 7000, TimeUnit.MILLISECONDS);
+            testSubscriber.assertValues(fs.getPath(NEWFILEPATH2,NEWFILENAME2), fs.getPath(NEWFILEPATH,NEWFILENAME));
         }
-
-        testSubscriber.assertValues(fs.getPath(NEWFILEPATH,NEWFILENAME), fs.getPath(NEWFILEPATH2,NEWFILENAME2));
     }
 
     @Test
@@ -65,8 +77,9 @@ public class WatchingChangesTest extends AbstractFilesysPreparation {
         WatchingChanges pathObservable = WatchingChanges.watchChanges(root);
         pathObservable.close();
         pathObservable.subscribe(testSubscriber);
-        pathObservable.addFile(fs.getPath(NEWFILEPATH,NEWFILENAME2));
+        Files.createFile(fs.getPath(NEWFILEPATH,NEWFILENAME2));
 
+        testSubscriber.awaitValueCount(1, 7000, TimeUnit.MILLISECONDS);
         testSubscriber.assertNoValues();
     }
 
@@ -80,10 +93,33 @@ public class WatchingChangesTest extends AbstractFilesysPreparation {
 
         try (WatchingChanges pathObservable = WatchingChanges.watchChanges(root)) {
             pathObservable.subscribe(testSubscriber);
-            pathObservable.addDirectory(fs.getPath(NEWFOLDER));
-            pathObservable.addFile(fs.getPath(NEWFOLDER,NEWRECURSIVEFILENAME));
+            Files.createDirectory(fs.getPath(NEWFOLDER));
+            testSubscriber.awaitValueCount(1, 7000, TimeUnit.MILLISECONDS);
+            testSubscriber.assertValues(fs.getPath(NEWFOLDER));
+            Files.createFile(fs.getPath(NEWFOLDER,NEWRECURSIVEFILENAME));
+            testSubscriber.awaitValueCount(2, 7000, TimeUnit.MILLISECONDS);
+            testSubscriber.assertValues(fs.getPath(NEWFOLDER), fs.getPath(NEWFOLDER,NEWRECURSIVEFILENAME));
         }
-
-        testSubscriber.assertValues(fs.getPath(NEWFOLDER), fs.getPath(NEWFOLDER,NEWRECURSIVEFILENAME));
     }
+
+//    @Test
+//    public void autowiredServiceTest(){
+//        watchingChangesService.addPath(fs.getPath("/src/dupa.gif"));
+//    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -5,5 +5,14 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
 
     <context:component-scan base-package="step3" />
+    
+    <bean name="watchingChangesService" class="step4.WatchingChangesService">
+        <constructor-arg ref="root"/>
+    </bean>
+
+    <bean id="root" class="java.nio.file.Paths" factory-method="get">
+        <constructor-arg value="/src" />
+        <constructor-arg><array /></constructor-arg>
+    </bean>
 
 </beans>
